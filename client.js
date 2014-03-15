@@ -19,6 +19,9 @@ Hooks = {
 	loggedIn: false,
 	lastUserId: null,
 
+	userReady: false,
+	lastUser: null,
+
 
 	//////////////////////////////////
 	//= METHODS
@@ -69,7 +72,7 @@ Hooks = {
 			if (Hooks.treatCloseAsLogout === true) {
 				Meteor.call('eventsOnLoggedOut', Hooks.lastUserId); // Fire the event on the server
 			}
-		}
+		};
 
 		
 
@@ -100,6 +103,24 @@ Hooks = {
 				Hooks.loggedIn = false; // Now set the proper state
 			}
 		});
+
+		Deps.autorun(function () {
+			user = Meteor.user();
+			if (user) {
+				// User is logged in
+				if (Hooks.userReady === false) {
+					// Update the latest user
+					Hooks.lastUser = user;
+					// User wasn't logged in before this updated, so fire the userReady event
+					if (typeof Hooks.onUserReady !== undefined) Hooks.onUserReady(); // Fire the event on the client
+				}
+
+				Hooks.userReady = true; // Now set the proper state
+			}
+			else{
+				Hooks.userReady = false;
+			}
+		});
 	},
 
 	//////////////////////////////////
@@ -109,5 +130,6 @@ Hooks = {
 	onGainFocus:    function(){},
 	onCloseSession: function(){},
 	onLoggedIn:     function(){},
-	onLoggedOut:    function(){}
+	onLoggedOut:    function(){},
+	onUserReady:    function(){}
 };
